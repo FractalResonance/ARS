@@ -1,0 +1,10 @@
+INFO:     Will watch for changes in these directories: ['/Users/hadi/Development/FRC/engine/ARS']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [40133] using WatchFiles
+INFO:     Started server process [40135]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:52654 - "POST /v1/full_reading HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52757 - "POST /v1/full_reading HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52765 - "POST /v1/full_reading HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52768 - "POST /v1/full_reading HTTP/1.1" 200 OK
