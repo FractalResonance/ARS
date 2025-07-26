@@ -145,6 +145,12 @@ class FullReadingResponse(BaseModel):
     natal_chart: NatalChartData
     transiting_positions: PlanetaryPositions
 
+class GeneralWeatherResponse(BaseModel):
+    """Response for collective/general weather endpoint"""
+    timestamp_utc: str
+    pressure: float = Field(..., description="Collective pressure component")
+    tension: float = Field(..., description="Collective tension component from live aspects")
+
 # --- Set the Ephemeris Path ---
 swe.set_ephe_path('./swiss_ephem_data')
 
@@ -228,6 +234,9 @@ PLANETARY_WEIGHTS = {
     "pluto": 0.3,
     "north_node": 0.6  # Lunar node
 }
+
+# --- Global Constants ---
+COLLECTIVE_NATAL_PRESSURE = 8.5  # Average natal pressure baseline for human collective
 
 # --- Aspect Definitions ---
 ASPECT_DEFINITIONS = {
@@ -835,6 +844,48 @@ async def get_full_reading(request: FullReadingRequest):
             "live_aspects": live_aspects,
             "natal_chart": natal_chart,
             "transiting_positions": transiting_positions
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/v1/general/weather", response_model=GeneralWeatherResponse)
+async def get_general_weather():
+    """
+    Calculate collective/general weather using live transiting positions.
+    
+    This endpoint provides the collective RPI Vector components:
+    - Pressure: Based on current transits vs collective natal baseline (8.5)
+    - Tension: From live aspects between transiting planets
+    
+    No input required - uses current UTC time and global average baseline.
+    """
+    try:
+        # Get current UTC time
+        now = datetime.utcnow()
+        
+        # Get current transiting planetary positions
+        transit_positions = get_planetary_positions(
+            now.year, now.month, now.day,
+            now.hour, now.minute
+        )
+        
+        # Calculate live aspects between transiting planets
+        live_aspects = calculate_aspects(transit_positions, transit_positions, check_same=True)
+        
+        # Calculate tension from live aspects
+        tension = calculate_tension_from_aspects(live_aspects)
+        
+        # Calculate current transit pressure (using latitude 0 for global baseline)
+        p_tra = calculate_pressure(transit_positions, 0.0, 0.0)
+        
+        # Calculate collective pressure as difference from baseline
+        collective_pressure = abs(p_tra - COLLECTIVE_NATAL_PRESSURE)
+        
+        return {
+            "timestamp_utc": now.isoformat(),
+            "pressure": round(collective_pressure, 6),
+            "tension": round(tension, 6)
         }
         
     except Exception as e:
